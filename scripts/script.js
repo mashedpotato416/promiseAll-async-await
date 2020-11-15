@@ -1,44 +1,47 @@
-function fetchAndDecode (url, type) {
-  // get a Response from URL
-  return fetch(url).then(response => {
-    // check if we receive a 'ok' response else... force an error to proceed with catch
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    } else {
-      // transform Response --> Promise
-      if (type === 'blob') {
-        return response.blob();
-      } else if(type === 'text') {
-        return response.text();
-      }
+async function fetchAndDecode(url, type) {
+  let response = await fetch(url);
+
+  let content;
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  } else {
+    if(type === 'blob') {
+      content = await response.blob();
+    } else if(type === 'text') {
+      content = await response.text();
     }
-  })
-  .catch(e => {
-    console.log(`There has been a problem with your fetch operation for resource "${url}": ` + e.message);
-  });
+
+    return content;
+  }
+
 }
 
-let coffee = fetchAndDecode('https://mashedpotato416.github.io/static-files/20201114/coffee.jpg', 'blob');
-let tea = fetchAndDecode('https://mashedpotato416.github.io/static-files/20201114/tea.jpg', 'blob');
-let description = fetchAndDecode('https://mashedpotato416.github.io/static-files/20201114/description.txt', 'text');
+async function displayContent() {
+  let coffee = fetchAndDecode('https://mashedpotato416.github.io/static-files/20201114/coffee.jpg', 'blob');
+  let tea = fetchAndDecode('https://mashedpotato416.github.io/static-files/20201114/tea.jpg', 'blob');
+  let description = fetchAndDecode('https://mashedpotato416.github.io/static-files/20201114/description.txt', 'text');
 
-Promise.all([coffee, tea, description]).then(values => {
-  console.log(values);
-  // Store each value returned from the promises in separate variables; create object URLs from the blobs
+
+  let values = await Promise.all([coffee, tea, description]);
+
   let objectURL1 = URL.createObjectURL(values[0]);
   let objectURL2 = URL.createObjectURL(values[1]);
   let descText = values[2];
-  
-  // Display the images in <img> elements
+
   let image1 = document.createElement('img');
   let image2 = document.createElement('img');
   image1.src = objectURL1;
   image2.src = objectURL2;
   document.body.appendChild(image1);
   document.body.appendChild(image2);
-  
-  // Display the text in a paragraph
+
   let para = document.createElement('p');
   para.textContent = descText;
   document.body.appendChild(para);
-});
+}
+
+displayContent()
+.catch((e) =>
+  console.log(e)
+);
